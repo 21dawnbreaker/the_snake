@@ -1,4 +1,4 @@
-from random import choice, randint
+from random import choice, randrange
 
 import pygame
 
@@ -40,7 +40,32 @@ clock = pygame.time.Clock()
 
 
 # Тут опишите все классы игры.
-...
+class GameObject:
+    def __init__(self, body_color: tuple[int, int, int]):
+        self.position = (GRID_WIDTH // 2, GRID_HEIGHT // 2)
+        self.body_color = body_color
+
+    def draw(self):
+        pass
+
+
+class Snake(GameObject):
+    def __init__(self):
+        super().__init__(SNAKE_COLOR)
+
+
+class Apple(GameObject):
+    def __init__(self):
+        super().__init__(APPLE_COLOR)
+        self.randomize_position()
+
+    def randomize_position(self):
+        self.position = (randrange(0, GRID_WIDTH), randrange(0, GRID_HEIGHT))
+
+    def draw(self):
+        rect = pygame.Rect(self.position, (GRID_SIZE, GRID_SIZE))
+        pygame.draw.rect(screen, self.body_color, rect)
+        pygame.draw.rect(screen, BORDER_COLOR, rect, 1)
 
 
 def main():
