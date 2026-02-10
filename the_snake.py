@@ -71,13 +71,29 @@ class Snake(GameObject):
             self.direction = self.next_direction
             self.next_direction = None
 
-    def move(self, snake_len: int, new_position: tuple[int, int]):
-        """обновляет позицию змейки (координаты каждой секции), добавляя новую голову в начало списка positions и
+    def move(self, apple):
+        """Обновляет позицию змейки (координаты каждой секции), добавляя новую голову в начало списка positions и
         удаляя последний элемент, если длина змейки не увеличилась.
         """
-        if self.length == snake_len:
-            tail = self.positions.pop()
-            self.positions = [tail] + self.positions[:len(self.positions) - 1]
+        new_head_position = ((self.direction[0] + self.positions[0][0]), (self.direction[1] + self.positions[0][1]))
+        last_rect = pygame.Rect(convert_grid_size_to_pixels(self.positions[-1]), (GRID_SIZE, GRID_SIZE))
+        snake_tail = self.positions[-1]
+        self.positions = [new_head_position] + self.positions[:-1]
+
+        if self.next_direction is not None:
+            self.direction = self.next_direction
+
+        #  Проверяет, съела ли змея яблоко.
+        if self.positions[0] != apple.position:
+            pygame.draw.rect(screen, BOARD_BACKGROUND_COLOR, last_rect)
+        else:
+            self.positions.append(snake_tail)
+            apple.randomize_position()
+
+        #  Проверяет, съела ли змея свой хвост.
+        if self.positions[0] in self.positions[1:]:
+            self.reset()
+
 
     def draw(self):
         """Метод draw класса Snake для отрисовки головы и тела."""
@@ -98,6 +114,9 @@ class Snake(GameObject):
 
     def reset(self):
         """Сбрасывает змейку в начальное состояние."""
+        for element in self.positions:
+            rect = pygame.Rect(convert_grid_size_to_pixels(element), (GRID_SIZE, GRID_SIZE))
+            pygame.draw.rect(screen, BOARD_BACKGROUND_COLOR, rect)
         self.position = (GRID_WIDTH // 2, GRID_HEIGHT // 2)
         self.positions = [self.position]
         self.length = 1
@@ -152,6 +171,7 @@ def main():
     while True:
         clock.tick(SPEED)
         handle_keys(snake)
+        snake.move(apple)
         snake.draw()
         apple.draw()
         pygame.display.update()
