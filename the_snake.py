@@ -94,6 +94,19 @@ class Snake(GameObject):
         if self.positions[0] in self.positions[1:]:
             self.reset()
 
+        #  Проверяет, не вышла ли змея за границы игрового экрана.
+        for element in self.positions:
+            element_index = self.positions.index(element)
+            if -1 == element[0]:
+                self.positions[element_index] = (31, self.positions[element_index][1])
+            elif 32 == element[0]:
+                self.positions[element_index] = (0, self.positions[element_index][1])
+            elif -1 == element[1]:
+                self.positions[element_index] = (self.positions[element_index][0], 23)
+            elif 24 == element[1]:
+                self.positions[element_index] = (self.positions[element_index][0], 0)
+
+
 
     def draw(self):
         """Метод draw класса Snake для отрисовки головы и тела."""
