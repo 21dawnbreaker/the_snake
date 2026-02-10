@@ -71,6 +71,14 @@ class Snake(GameObject):
             self.direction = self.next_direction
             self.next_direction = None
 
+    def __check_if_snake_eats_apple(self, apple, last_rect, snake_tail):
+        """Проверяет, съела ли змея яблоко."""
+        if self.positions[0] != apple.position:
+            pygame.draw.rect(screen, BOARD_BACKGROUND_COLOR, last_rect)
+        else:
+            self.positions.append(snake_tail)
+            apple.randomize_position()
+
     def move(self, apple):
         """Обновляет позицию змейки (координаты каждой секции), добавляя новую голову в начало списка positions и
         удаляя последний элемент, если длина змейки не увеличилась.
@@ -83,12 +91,7 @@ class Snake(GameObject):
         if self.next_direction is not None:
             self.direction = self.next_direction
 
-        #  Проверяет, съела ли змея яблоко.
-        if self.positions[0] != apple.position:
-            pygame.draw.rect(screen, BOARD_BACKGROUND_COLOR, last_rect)
-        else:
-            self.positions.append(snake_tail)
-            apple.randomize_position()
+        self.__check_if_snake_eats_apple(apple, last_rect, snake_tail)
 
         #  Проверяет, съела ли змея свой хвост.
         if self.positions[0] in self.positions[1:]:
