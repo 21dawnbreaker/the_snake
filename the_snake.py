@@ -42,15 +42,23 @@ clock = pygame.time.Clock()
 # Тут опишите все классы игры.
 class GameObject:
     def __init__(self, body_color: tuple[int, int, int]):
+        """Инициализация общих аттрибутов для змеи и яблока."""
         self.position = (GRID_WIDTH // 2, GRID_HEIGHT // 2)
         self.body_color = body_color
 
     def draw(self):
+        """Абстрактный метод-заглушка для дальнейшей реализации
+        в дочерних классах.
+        """
         pass
 
+def convert_grid_size_to_pixels(position: tuple[int, int]) -> tuple[int, int]:
+    """Конвертирует координаты из номеров ячеек в пиксели для дальнейшей отрисовки"""
+    return tuple(map(lambda x: x * GRID_SIZE, position))  # type: ignore
 
 class Snake(GameObject):
     def __init__(self, length=1, direction=RIGHT, next_direction=None, body_color=SNAKE_COLOR):
+        """Инициализация змеи."""
         super().__init__(body_color)
         self.positions = [self.position]
         self.length = length
@@ -58,7 +66,7 @@ class Snake(GameObject):
         self.next_direction = next_direction
 
     def update_direction(self):
-        """Метод обновления направления после нажатия на кнопку"""
+        """Метод обновления направления после нажатия на кнопку."""
         if self.next_direction:
             self.direction = self.next_direction
             self.next_direction = None
@@ -72,20 +80,25 @@ class Snake(GameObject):
             self.positions = [tail] + self.positions[:len(self.positions) - 1]
 
     def draw(self):
-        """Метод draw класса Snake"""
+        """Метод draw класса Snake для отрисовки головы и тела."""
+        # Отрисовка головы змейки.
+        head_rect = pygame.Rect(convert_grid_size_to_pixels(self.positions[0]), (GRID_SIZE, GRID_SIZE))
+        pygame.draw.rect(screen, self.body_color, head_rect)
+        pygame.draw.rect(screen, BORDER_COLOR, head_rect, 1)
+
+        # Отрисовка тела змейки.
         for position in self.positions[:-1]:
-            rect = (pygame.Rect(position, (GRID_SIZE, GRID_SIZE)))  # в прекоде так было, заменить на self.position?
+            rect = (pygame.Rect(tuple(map(lambda x: x * GRID_SIZE, position)), (GRID_SIZE, GRID_SIZE)))
             pygame.draw.rect(screen, self.body_color, rect)
             pygame.draw.rect(screen, BORDER_COLOR, rect, 1)
 
     def get_head_position(self) -> tuple[int, int]:
-        """Возвращает позицию головы змейки"""
+        """Возвращает позицию головы змейки."""
         return self.positions[0]
 
     def reset(self):
         """Сбрасывает змейку в начальное состояние."""
         self.position = (GRID_WIDTH // 2, GRID_HEIGHT // 2)
-        self.body_color = SNAKE_COLOR
         self.positions = [self.position]
         self.length = 1
         self.direction = RIGHT
@@ -94,20 +107,26 @@ class Snake(GameObject):
 
 class Apple(GameObject):
     def __init__(self):
+        """Инициализация яблока."""
         super().__init__(APPLE_COLOR)
         self.randomize_position()
 
     def randomize_position(self):
+        """Рандомизирует позицию яблока."""
+        if self.position is not None:
+            last_rect = pygame.Rect(convert_grid_size_to_pixels(self.position), (GRID_SIZE, GRID_SIZE))
+            pygame.draw.rect(screen, BOARD_BACKGROUND_COLOR, last_rect)
         self.position = (randrange(0, GRID_WIDTH), randrange(0, GRID_HEIGHT))
 
     def draw(self):
-        rect = pygame.Rect(tuple(map(lambda x: x * GRID_SIZE, self.position)), (GRID_SIZE, GRID_SIZE))
+        """Метод draw класса Apple."""
+        rect = pygame.Rect(convert_grid_size_to_pixels(self.position), (GRID_SIZE, GRID_SIZE))
         pygame.draw.rect(screen, self.body_color, rect)
         pygame.draw.rect(screen, BORDER_COLOR, rect, 1)
 
 
 def handle_keys(game_object):
-    """Функция обработки действий пользователя"""
+    """Функция обработки действий пользователя."""
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
@@ -127,13 +146,15 @@ def main():
     # Инициализация PyGame:
     pygame.init()
     # Тут нужно создать экземпляры классов.
-    ...
+    snake = Snake()
+    apple = Apple()
 
-    # while True:
-    #     clock.tick(SPEED)
-
-        # Тут опишите основную логику игры.
-        # ...
+    while True:
+        clock.tick(SPEED)
+        handle_keys(snake)
+        snake.draw()
+        apple.draw()
+        pygame.display.update()
 
 
 if __name__ == '__main__':
@@ -143,10 +164,7 @@ if __name__ == '__main__':
 
 
 
-#     # Отрисовка головы змейки
-#     head_rect = pygame.Rect(self.positions[0], (GRID_SIZE, GRID_SIZE))
-#     pygame.draw.rect(screen, self.body_color, head_rect)
-#     pygame.draw.rect(screen, BORDER_COLOR, head_rect, 1)
+
 
 #     # Затирание последнего сегмента
 #     if self.last:
