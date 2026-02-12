@@ -106,9 +106,9 @@ class Snake(GameObject):
             self.reset()
 
         #  Проверяет, не вышла ли змея за границы игрового экрана.
-        for element in self.positions:
-            element_index = self.positions.index(element)
-            self.positions[element_index] = ((element[0] + GRID_WIDTH) % GRID_WIDTH, (element[1] + GRID_HEIGHT) % GRID_HEIGHT)
+        for i in range(len(self.positions)):
+            position = self.positions[i]
+            self.positions[i] = ((position[0] + GRID_WIDTH) % GRID_WIDTH, (position[1] + GRID_HEIGHT) % GRID_HEIGHT)
 
 
     def draw(self):
