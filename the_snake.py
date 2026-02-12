@@ -1,4 +1,4 @@
-from random import choice, randrange
+from random import randrange
 
 import pygame
 
@@ -41,7 +41,7 @@ clock = pygame.time.Clock()
 
 # Тут опишите все классы игры.
 class GameObject:
-    def __init__(self, body_color: tuple[int, int, int]):
+    def __init__(self, body_color: tuple[int, int, int]=BOARD_BACKGROUND_COLOR):
         """Инициализация общих аттрибутов для змеи и яблока."""
         self.position = (GRID_WIDTH // 2, GRID_HEIGHT // 2)
         self.body_color = body_color
@@ -55,6 +55,13 @@ class GameObject:
 def convert_grid_size_to_pixels(position: tuple[int, int]) -> tuple[int, int]:
     """Конвертирует координаты из номеров ячеек в пиксели для дальнейшей отрисовки"""
     return tuple(map(lambda x: x * GRID_SIZE, position))  # type: ignore
+
+def draw_cell(position, color, draw_borders=True):
+    """Закрашивает клетку переданным цветом. Опционально рисует рамки для этой клетки."""
+    rect = pygame.Rect(convert_grid_size_to_pixels(position), (GRID_SIZE, GRID_SIZE))
+    pygame.draw.rect(screen, color, rect)
+    if draw_borders:
+        pygame.draw.rect(screen, BORDER_COLOR, rect, 1)
 
 class Snake(GameObject):
     def __init__(self, length=1, direction=RIGHT, next_direction=None, body_color=SNAKE_COLOR):
@@ -71,10 +78,10 @@ class Snake(GameObject):
             self.direction = self.next_direction
             self.next_direction = None
 
-    def __check_if_snake_eats_apple(self, apple, last_rect, snake_tail):
+    def __check_if_snake_eats_apple(self, apple, snake_tail):
         """Проверяет, съела ли змея яблоко."""
         if self.positions[0] != apple.position:
-            pygame.draw.rect(screen, BOARD_BACKGROUND_COLOR, last_rect)
+            draw_cell(snake_tail, BOARD_BACKGROUND_COLOR, False)
         else:
             self.positions.append(snake_tail)
             apple.randomize_position()
@@ -84,14 +91,13 @@ class Snake(GameObject):
         удаляя последний элемент, если длина змейки не увеличилась.
         """
         new_head_position = ((self.direction[0] + self.positions[0][0]), (self.direction[1] + self.positions[0][1]))
-        last_rect = pygame.Rect(convert_grid_size_to_pixels(self.positions[-1]), (GRID_SIZE, GRID_SIZE))
         snake_tail = self.positions[-1]
         self.positions = [new_head_position] + self.positions[:-1]
 
         if self.next_direction is not None:
             self.direction = self.next_direction
 
-        self.__check_if_snake_eats_apple(apple, last_rect, snake_tail)
+        self.__check_if_snake_eats_apple(apple, snake_tail)
 
         #  Проверяет, съела ли змея свой хвост.
         if self.positions[0] in self.positions[1:]:
@@ -100,29 +106,18 @@ class Snake(GameObject):
         #  Проверяет, не вышла ли змея за границы игрового экрана.
         for element in self.positions:
             element_index = self.positions.index(element)
-            if -1 == element[0]:
-                self.positions[element_index] = (31, self.positions[element_index][1])
-            elif 32 == element[0]:
-                self.positions[element_index] = (0, self.positions[element_index][1])
-            elif -1 == element[1]:
-                self.positions[element_index] = (self.positions[element_index][0], 23)
-            elif 24 == element[1]:
-                self.positions[element_index] = (self.positions[element_index][0], 0)
-
+            self.positions[element_index] = ((element[0] + GRID_WIDTH) % GRID_WIDTH, (element[1] + GRID_HEIGHT) % GRID_HEIGHT)
 
 
     def draw(self):
-        """Метод draw класса Snake для отрисовки головы и тела."""
-        # Отрисовка головы змейки.
-        head_rect = pygame.Rect(convert_grid_size_to_pixels(self.positions[0]), (GRID_SIZE, GRID_SIZE))
-        pygame.draw.rect(screen, self.body_color, head_rect)
-        pygame.draw.rect(screen, BORDER_COLOR, head_rect, 1)
+        """Метод для отрисовки головы и тела змейки."""
 
-        # Отрисовка тела змейки.
+        # Отрисовка головы змейки.
+        draw_cell(self.positions[0], self.body_color)
+
+        # Отрисовка тела змейки по сегментам ее тела.
         for position in self.positions[:-1]:
-            rect = (pygame.Rect(tuple(map(lambda x: x * GRID_SIZE, position)), (GRID_SIZE, GRID_SIZE)))
-            pygame.draw.rect(screen, self.body_color, rect)
-            pygame.draw.rect(screen, BORDER_COLOR, rect, 1)
+            draw_cell(position, self.body_color)
 
     def get_head_position(self) -> tuple[int, int]:
         """Возвращает позицию головы змейки."""
@@ -131,8 +126,7 @@ class Snake(GameObject):
     def reset(self):
         """Сбрасывает змейку в начальное состояние."""
         for element in self.positions:
-            rect = pygame.Rect(convert_grid_size_to_pixels(element), (GRID_SIZE, GRID_SIZE))
-            pygame.draw.rect(screen, BOARD_BACKGROUND_COLOR, rect)
+            draw_cell(element, BOARD_BACKGROUND_COLOR, False)
         self.position = (GRID_WIDTH // 2, GRID_HEIGHT // 2)
         self.positions = [self.position]
         self.length = 1
@@ -142,26 +136,23 @@ class Snake(GameObject):
 
 class Apple(GameObject):
     def __init__(self):
-        """Инициализация яблока."""
+        """Создание яблока."""
         super().__init__(APPLE_COLOR)
         self.randomize_position()
 
     def randomize_position(self):
         """Рандомизирует позицию яблока."""
         if self.position is not None:
-            last_rect = pygame.Rect(convert_grid_size_to_pixels(self.position), (GRID_SIZE, GRID_SIZE))
-            pygame.draw.rect(screen, BOARD_BACKGROUND_COLOR, last_rect)
+            draw_cell(self.position, APPLE_COLOR, False)
         self.position = (randrange(0, GRID_WIDTH), randrange(0, GRID_HEIGHT))
 
     def draw(self):
-        """Метод draw класса Apple."""
-        rect = pygame.Rect(convert_grid_size_to_pixels(self.position), (GRID_SIZE, GRID_SIZE))
-        pygame.draw.rect(screen, self.body_color, rect)
-        pygame.draw.rect(screen, BORDER_COLOR, rect, 1)
+        """Метод, который отрисовывает яблоко."""
+        draw_cell(self.position, APPLE_COLOR)
 
 
 def handle_keys(game_object):
-    """Функция обработки действий пользователя."""
+    """Функция обработки действий пользователя из прекода."""
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
@@ -178,9 +169,8 @@ def handle_keys(game_object):
 
 
 def main():
-    # Инициализация PyGame:
     pygame.init()
-    # Тут нужно создать экземпляры классов.
+
     snake = Snake()
     apple = Apple()
 
@@ -195,14 +185,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-
-
-
-
-
-#     # Затирание последнего сегмента
-#     if self.last:
-#         last_rect = pygame.Rect(self.last, (GRID_SIZE, GRID_SIZE))
-#         pygame.draw.rect(screen, BOARD_BACKGROUND_COLOR, last_rect)
