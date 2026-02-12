@@ -38,6 +38,8 @@ pygame.display.set_caption('Змейка')
 # Настройка времени:
 clock = pygame.time.Clock()
 
+# Объявление snake для использования в классе Apple:
+snake = None
 
 # Тут опишите все классы игры.
 class GameObject:
@@ -141,10 +143,13 @@ class Apple(GameObject):
         self.randomize_position()
 
     def randomize_position(self):
-        """Рандомизирует позицию яблока."""
+        """Удаляет съеденное яблоко и рандомизирует позицию нового."""
         if self.position is not None:
             draw_cell(self.position, APPLE_COLOR, False)
-        self.position = (randrange(0, GRID_WIDTH), randrange(0, GRID_HEIGHT))
+        while True:
+            self.position = (randrange(0, GRID_WIDTH), randrange(0, GRID_HEIGHT))
+            if self.position not in snake.positions:
+                break
 
     def draw(self):
         """Метод, который отрисовывает яблоко."""
@@ -171,6 +176,7 @@ def handle_keys(game_object):
 def main():
     pygame.init()
 
+    global snake
     snake = Snake()
     apple = Apple()
 
