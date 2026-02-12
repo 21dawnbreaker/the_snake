@@ -41,32 +41,47 @@ clock = pygame.time.Clock()
 # Объявление snake для использования в классе Apple:
 snake = None
 
-# Тут опишите все классы игры.
+
 class GameObject:
-    def __init__(self, body_color: tuple[int, int, int]=BOARD_BACKGROUND_COLOR):
+    """Представление игрового объекта, например змейки и яблока."""
+
+    def __init__(self,
+                 body_color: tuple[int, int, int] = BOARD_BACKGROUND_COLOR
+                 ):
         """Инициализация общих аттрибутов для змеи и яблока."""
         self.position = (GRID_WIDTH // 2, GRID_HEIGHT // 2)
         self.body_color = body_color
 
     def draw(self):
-        """Абстрактный метод-заглушка для дальнейшей реализации
-        в дочерних классах.
+        """Абстрактный метод-заглушка для дальнейшей
+        реализации в дочерних классах.
         """
         pass
 
+
 def convert_grid_size_to_pixels(position: tuple[int, int]) -> tuple[int, int]:
-    """Конвертирует координаты из номеров ячеек в пиксели для дальнейшей отрисовки"""
+    """Конвертирует координаты из номеров ячеек в пиксели
+    для дальнейшей отрисовки.
+    """
     return tuple(map(lambda x: x * GRID_SIZE, position))  # type: ignore
 
+
 def draw_cell(position, color, draw_borders=True):
-    """Закрашивает клетку переданным цветом. Опционально рисует рамки для этой клетки."""
-    rect = pygame.Rect(convert_grid_size_to_pixels(position), (GRID_SIZE, GRID_SIZE))
+    """Закрашивает клетку переданным цветом. Опционально
+    рисует рамки для этой клетки.
+    """
+    rect = pygame.Rect(convert_grid_size_to_pixels(position),
+                       (GRID_SIZE, GRID_SIZE))
     pygame.draw.rect(screen, color, rect)
     if draw_borders:
         pygame.draw.rect(screen, BORDER_COLOR, rect, 1)
 
+
 class Snake(GameObject):
-    def __init__(self, length=1, direction=RIGHT, next_direction=None, body_color=SNAKE_COLOR):
+    """Представление змейки."""
+
+    def __init__(self, length=1, direction=RIGHT,
+                 next_direction=None, body_color=SNAKE_COLOR):
         """Инициализация змеи."""
         super().__init__(body_color)
         self.positions = [self.position]
@@ -89,10 +104,12 @@ class Snake(GameObject):
             apple.randomize_position()
 
     def move(self, apple):
-        """Обновляет позицию змейки (координаты каждой секции), добавляя новую голову в начало списка positions и
+        """Обновляет позицию змейки (координаты каждой секции),
+        добавляя новую голову в начало списка positions и
         удаляя последний элемент, если длина змейки не увеличилась.
         """
-        new_head_position = ((self.direction[0] + self.positions[0][0]), (self.direction[1] + self.positions[0][1]))
+        new_head_position = ((self.direction[0] + self.positions[0][0]),
+                             (self.direction[1] + self.positions[0][1]))
         snake_tail = self.positions[-1]
         self.positions = [new_head_position] + self.positions[:-1]
 
@@ -108,12 +125,11 @@ class Snake(GameObject):
         #  Проверяет, не вышла ли змея за границы игрового экрана.
         for i in range(len(self.positions)):
             position = self.positions[i]
-            self.positions[i] = ((position[0] + GRID_WIDTH) % GRID_WIDTH, (position[1] + GRID_HEIGHT) % GRID_HEIGHT)
-
+            self.positions[i] = ((position[0] + GRID_WIDTH) % GRID_WIDTH,
+                                 (position[1] + GRID_HEIGHT) % GRID_HEIGHT)
 
     def draw(self):
         """Метод для отрисовки головы и тела змейки."""
-
         # Отрисовка головы змейки.
         draw_cell(self.positions[0], self.body_color)
 
@@ -137,6 +153,8 @@ class Snake(GameObject):
 
 
 class Apple(GameObject):
+    """Представление яблока."""
+
     def __init__(self):
         """Создание яблока."""
         super().__init__(APPLE_COLOR)
@@ -147,8 +165,9 @@ class Apple(GameObject):
         if self.position is not None:
             draw_cell(self.position, APPLE_COLOR, False)
         while True:
-            self.position = (randrange(0, GRID_WIDTH), randrange(0, GRID_HEIGHT))
-            if self.position not in snake.positions:
+            self.position = (randrange(0, GRID_WIDTH),
+                             randrange(0, GRID_HEIGHT))
+            if snake is None or self.position not in snake.positions:
                 break
 
     def draw(self):
@@ -174,6 +193,7 @@ def handle_keys(game_object):
 
 
 def main():
+    """Основная игровая логика."""
     pygame.init()
 
     global snake
