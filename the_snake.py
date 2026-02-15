@@ -1,4 +1,4 @@
-from random import randrange, choice
+from random import choice, randrange
 
 import pygame as pg
 
@@ -145,12 +145,12 @@ class Snake(GameObject):
 class Apple(GameObject):
     """Представление яблока."""
 
-    def __init__(self, occupied_positions: list[tuple[int, int]] = [],
+    def __init__(self, occupied_positions: list[tuple[int, int]] | None = None,
                  body_color=APPLE_COLOR,
                  position: tuple[int, int] = GRID_CENTER):
         """Создание яблока."""
         super().__init__(body_color, position)
-        self.randomize_position(occupied_positions)
+        self.randomize_position(occupied_positions or [])
 
     def randomize_position(self, occupied_positions: list[tuple[int, int]]):
         """Удаляет съеденное яблоко и рандомизирует позицию нового."""
